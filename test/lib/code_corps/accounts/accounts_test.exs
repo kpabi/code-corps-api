@@ -14,7 +14,7 @@ defmodule CodeCorps.AccountsTest do
         |> Accounts.create_from_github
 
       assert user.id
-      assert user.context == "github"
+      assert user.sign_up_context == "github"
       assert user.type == "user"
     end
 
@@ -34,6 +34,23 @@ defmodule CodeCorps.AccountsTest do
       params = %{"email" => "test@email.com", "type" => "Organization"}
       changeset = Accounts.create_from_github_changeset(%User{}, params)
       assert changeset.errors[:type] == {"is invalid", [validation: :inclusion]}
+    end
+  end
+
+  describe "update_from_github_oauth/3" do
+    test "updates proper user from provided payload" do
+      user = insert(:user)
+      params = TestHelpers.load_endpoint_fixture("user")
+      token = "random_token"
+
+      {:ok, %User{} = user} =
+        user
+        |> Accounts.update_from_github_oauth( params, token)
+
+      assert user.id
+      assert user.github_auth_token == token
+      assert user.sign_up_context == "default"
+      assert user.type == "user"
     end
   end
 end
