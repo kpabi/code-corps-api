@@ -41,8 +41,9 @@ defmodule CodeCorps.GitHub.Event.Issues.ChangesetBuilder do
       TaskList |> Repo.get_by(project_id: project_id, inbox: true)
 
     task
-    |> Changeset.change(TaskAdapter.from_issue(issue_attrs))
+    |> Changeset.cast(TaskAdapter.from_issue(issue_attrs), [:created_at, :github_issue_number, :markdown, :modified_at, :status, :title])
     |> MarkdownRendererService.render_markdown_to_html(:markdown, :body)
+    |> Changeset.put_change(:created_on, "github")
     |> Changeset.put_change(:github_repo_id, github_repo_id)
     |> Changeset.put_change(:project_id, project_id)
     |> Changeset.put_change(:task_list_id, task_list_id)
@@ -56,8 +57,9 @@ defmodule CodeCorps.GitHub.Event.Issues.ChangesetBuilder do
 
   defp update_changeset(%Task{} = task, issue_attrs) do
     task
-    |> Changeset.change(issue_attrs |> TaskAdapter.from_issue())
+    |> Changeset.cast(TaskAdapter.from_issue(issue_attrs), [:github_issue_number, :markdown, :modified_at, :status, :title])
     |> MarkdownRendererService.render_markdown_to_html(:markdown, :body)
+    |> Changeset.put_change(:updated_on, "github")
     |> Changeset.validate_required([:project_id, :title, :user_id])
     |> Changeset.assoc_constraint(:github_repo)
     |> Changeset.assoc_constraint(:project)

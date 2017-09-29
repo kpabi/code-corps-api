@@ -10,8 +10,10 @@ defmodule CodeCorps.GitHub.Adapters.Task do
   }
 
   @mapping [
+    {:created_at, ["created_at"]},
     {:github_issue_number, ["number"]},
     {:markdown, ["body"]},
+    {:modified_at, ["updated_at"]},
     {:status, ["state"]},
     {:title, ["title"]}
   ]
@@ -26,6 +28,8 @@ defmodule CodeCorps.GitHub.Adapters.Task do
     task
     |> Map.from_struct
     |> MapTransformer.transform_inverse(@mapping)
+    |> Map.delete("created_at")
     |> Map.delete("number")
+    |> Map.delete("updated_at")
   end
 end
