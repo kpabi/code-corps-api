@@ -40,6 +40,18 @@ defmodule CodeCorps.Accounts do
   end
 
   @doc ~S"""
+  Ensures an email is set without overwriting an existing email.
+  """
+  @spec ensure_email(Changeset.t, map) :: Changeset.t
+  def ensure_email(%Changeset{} = changeset, %{"email" => new_email} = _params) do
+    case changeset |> Changeset.get_field(:email) do
+      nil -> changeset |> Changeset.put_change(:email, new_email)
+      _email -> changeset
+    end
+  end
+  def ensure_email(%Changeset{} = changeset, _params), do: changeset
+
+  @doc ~S"""
   Updates a user record using attributes from a GitHub payload along with the
   access token.
   """
@@ -74,6 +86,7 @@ defmodule CodeCorps.Accounts do
   def update_from_github_oauth_changeset(struct, %{} = params) do
     struct
     |> Changeset.cast(params, [:github_auth_token, :github_avatar_url, :github_id, :github_username, :type])
+    |> ensure_email(params)
     |> Changeset.validate_required([:github_auth_token, :github_avatar_url, :github_id, :github_username, :type])
   end
 
@@ -122,4 +135,6 @@ defmodule CodeCorps.Accounts do
     |> Repo.update_all(updates, update_options)
     |> (fn {_count, comments} -> {:ok, comments} end).()
   end
+
+
 end

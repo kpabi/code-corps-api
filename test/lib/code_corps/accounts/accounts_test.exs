@@ -37,6 +37,48 @@ defmodule CodeCorps.AccountsTest do
     end
   end
 
+  describe "ensure_email/2" do
+    test "ensures an email is not overridden when the user has an email" do
+      user = insert(:user, email: "original@email.com")
+      params = %{"email" => "new@email.com"}
+      changeset =
+        user
+        |> Changeset.cast(params, [])
+        |> Accounts.ensure_email(params)
+      refute changeset.changes[:email]
+    end
+
+    test "ensures an email is not set to nil" do
+      user = insert(:user, email: "original@email.com")
+      params = %{"email" => nil}
+      changeset =
+        user
+        |> Changeset.cast(params, [])
+        |> Accounts.ensure_email(params)
+      refute changeset.changes[:email]
+    end
+
+    test "ensures an email is set when initially nil" do
+      user = insert(:user, email: nil)
+      params = %{"email" => "new@email.com"}
+      changeset =
+        user
+        |> Changeset.cast(params, [])
+        |> Accounts.ensure_email(params)
+      assert changeset.changes[:email]
+    end
+
+    test "works without email params" do
+      user = insert(:user)
+      changeset =
+        user
+        |> Changeset.cast(%{}, [])
+        |> Accounts.ensure_email(%{})
+      assert changeset.valid?
+    end
+
+  end
+
   describe "update_from_github_oauth/3" do
     test "updates proper user from provided payload" do
       user = insert(:user)
@@ -45,7 +87,7 @@ defmodule CodeCorps.AccountsTest do
 
       {:ok, %User{} = user} =
         user
-        |> Accounts.update_from_github_oauth( params, token)
+        |> Accounts.update_from_github_oauth(params, token)
 
       assert user.id
       assert user.github_auth_token == token
